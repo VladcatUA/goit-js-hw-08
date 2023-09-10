@@ -1,51 +1,37 @@
 import throttle from 'lodash.throttle';
 
-const feedbackForm = document.querySelector(".feedback-form");
-const LOCALSTORAGE_KEY = "feedback-form-state";
-const emailInput = feedbackForm.querySelector('input[name="email"]');
-const messageTextarea = feedbackForm.querySelector('textarea[name="message"]');
+const STORAGE_KEY = 'feedback-form-state';
 
-feedbackForm.addEventListener("input", throttle(handleInput, 500));
+const form = document.querySelector('.feedback-form');
 
-window.addEventListener("load", () => {
-    const savedState = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY)) || {};
-    emailInput.value = savedState.email || "";
-    messageTextarea.value = savedState.message || "";
-  });
-  
-feedbackForm.addEventListener("submit", handleSubmit);
+form.addEventListener('input', throttle(onInputData, 500));
+form.addEventListener('submit', onFormSubmit);
 
-function handleSubmit(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const email = emailInput.value;
-  const message = messageTextarea.value;
-  
-  if (email === "" || message === "") {
-    return console.log("Please fill in all the fields!");
-  }
+let dataForm = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+const { email, message } = form.elements;
+reloadPage();
 
-  const formData = {
-    email,
-    message,
-  };
-
-  localStorage.removeItem(LOCALSTORAGE_KEY); 
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(formData));
-  console.log(formData);
-
-  emailInput.value = "";
-  messageTextarea.value = "";
+function onInputData(event) {
+  dataForm = { email: email.value, message: message.value };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dataForm));
 }
 
-function handleInput() {
-    const email = emailInput.value;
-    const message = messageTextarea.value;
-    const formData = {
-      email,
-      message,
-    };
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(formData));
+function reloadPage() {
+  if (dataForm) {
+    email.value = dataForm.email || '';
+    message.value = dataForm.message || '';
   }
-  
-  handleInput();
+}
+
+function onFormSubmit(event) {
+  event.preventDefault();
+  console.log({ email: email.value, message: message.value });
+
+  if (email.value === '' || message.value === '') {
+    return alert(`Будь ласка, заповніть всі обов'язкові поля!`);
+  }
+
+  localStorage.removeItem(STORAGE_KEY);
+  event.currentTarget.reset();
+  dataForm = {};
+}
